@@ -10,11 +10,26 @@ import type { AppConfig } from './config/configuration';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
+  app.enableShutdownHooks();
+
+  // Render sits in front of the app as a single reverse-proxy hop; trust
+  // exactly that hop so Express's req.ip (and @nestjs/throttler's default
+  // tracker, which reads req.ip) resolves to the real client IP instead of
+  // Render's proxy IP for every request. Do NOT use `true`/'*', which would
+  // trust an attacker-supplied X-Forwarded-For from arbitrary hops.
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
   const configService = app.get(ConfigService);
   const { port, corsOrigin } = configService.get<AppConfig>('app')!;
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      // Helmet's default Cross-Origin-Resource-Policy is `same-origin`,
+      // which blocks a separately-hosted frontend from fetching this API
+      // in-browser even when CORS (below) is configured correctly.
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
   app.enableCors({ origin: corsOrigin });
 
   app.useGlobalPipes(
