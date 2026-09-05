@@ -43,8 +43,11 @@ COPY --from=build --chown=liquiverde:liquiverde /app/package.json ./package.json
 # ts-node (used by `prisma db seed`, see prisma.config.ts) needs this to
 # resolve the project's module settings correctly.
 COPY --from=build --chown=liquiverde:liquiverde /app/tsconfig.json ./tsconfig.json
+COPY --chown=liquiverde:liquiverde docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 USER liquiverde
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget -qO- http://localhost:3000/health || exit 1
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "dist/main.js"]
