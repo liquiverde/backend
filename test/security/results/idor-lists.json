@@ -1,0 +1,82 @@
+[
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "setup: both users registered",
+    "pass": true
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "setup: user A created a list",
+    "pass": true
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "setup: a seeded product exists to add",
+    "pass": true
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "setup: user A added an item to their list",
+    "pass": true
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "B on A's list — GET /lists/:id → 403",
+    "pass": true,
+    "details": "status=403"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "B on A's list — PATCH /lists/:id → 403",
+    "pass": true,
+    "details": "status=403"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "B on A's list — POST /lists/:id/items → 403",
+    "pass": true,
+    "details": "status=403"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "B on A's list — DELETE /lists/:id/items/:itemId → 403",
+    "pass": true,
+    "details": "status=403"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "B on A's list — POST /lists/:id/optimize → 403",
+    "pass": true,
+    "details": "status=403"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "B on A's list — GET /lists/:id/savings → 403",
+    "pass": true,
+    "details": "status=403"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "B on A's list — POST /lists/:id/items/:itemId/substitute → 403",
+    "pass": true,
+    "details": "status=403"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "B on A's list — DELETE /lists/:id → 403",
+    "pass": true,
+    "details": "status=403"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "GET /lists for B never includes A's list id",
+    "pass": true,
+    "details": "not present"
+  },
+  {
+    "suite": "1.2 IDOR / ownership bypass",
+    "name": "A can still access their own list (200)",
+    "pass": true,
+    "details": "status=200"
+  }
+]

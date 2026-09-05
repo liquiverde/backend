@@ -1,0 +1,57 @@
+[
+  {
+    "suite": "1.5 Input validation",
+    "name": "setup: baseline user registered",
+    "pass": true
+  },
+  {
+    "suite": "1.5 Input validation",
+    "name": "POST /lists budgetMax=\"not-a-number\" → 400",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.5 Input validation",
+    "name": "POST /lists budgetMax=-1000 → 400",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.5 Input validation",
+    "name": "POST /lists/:id/items quantity=-5 → 400",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.5 Input validation",
+    "name": "POST /lists/:id/items priority=10 → 400",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.5 Input validation",
+    "name": "GET /products/compare with 50 ids → 400 (ArrayMaxSize(5))",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.5 Input validation",
+    "name": "POST /lists with deeply nested budgetMax → 400, not 500",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.5 Input validation",
+    "name": "RegisterDto.name has no length limit (accepts a 100,000-char name)",
+    "pass": true,
+    "details": "RegisterDto.name lacks a @MaxLength decorator and the Prisma schema column has no length constraint either — a client can send an arbitrarily long name (bounded only by the default Express body-size limit). Recommendation: add @MaxLength(120) (or similar) to name fields across DTOs.",
+    "isFinding": true,
+    "severity": "low"
+  },
+  {
+    "suite": "1.5 Input validation",
+    "name": "unicode/emoji name on registration → 201 (handled correctly)",
+    "pass": true,
+    "details": "status=201"
+  }
+]

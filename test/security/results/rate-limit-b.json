@@ -1,0 +1,32 @@
+[
+  {
+    "suite": "1.6-B Rate limit — global 100/min (GET /health)",
+    "name": "Some requests succeeded (200)",
+    "pass": true,
+    "details": "100 succeeded"
+  },
+  {
+    "suite": "1.6-B Rate limit — global 100/min (GET /health)",
+    "name": "Some requests were throttled (429) once past the limit",
+    "pass": true,
+    "details": "10 throttled"
+  },
+  {
+    "suite": "1.6-B Rate limit — global 100/min (GET /health)",
+    "name": "Roughly ~100 requests succeeded before throttling kicked in",
+    "pass": true,
+    "details": "100 succeeded (expected close to 100)"
+  },
+  {
+    "suite": "1.6-B Rate limit — global 100/min (GET /health)",
+    "name": "429 response includes Retry-After header",
+    "pass": true,
+    "details": "Retry-After=60"
+  },
+  {
+    "suite": "1.6-B Rate limit — global 100/min (GET /health)",
+    "name": "Retry-After is <= RATE_LIMIT_TTL (60s)",
+    "pass": true,
+    "details": "60s"
+  }
+]

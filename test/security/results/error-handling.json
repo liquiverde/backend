@@ -1,0 +1,45 @@
+[
+  {
+    "suite": "1.9 Error handling / information leakage",
+    "name": "401 body has no stack trace leakage",
+    "pass": true,
+    "details": "{\"statusCode\":401,\"error\":\"UNAUTHORIZED\",\"message\":\"Unauthorized\",\"path\":\"/lists/00000000-0000-4000-8000-000000000001\",\"timestamp\":\"2026-09-04T20:00:50.149Z\",\"requestId\":\"b921f8ab-bcb6-412a-9d73-3162b820fed6\"}"
+  },
+  {
+    "suite": "1.9 Error handling / information leakage",
+    "name": "400 validation error body has no stack trace leakage",
+    "pass": true,
+    "details": "{\"statusCode\":400,\"error\":\"BAD_REQUEST\",\"message\":[\"email must be an email\",\"password must be longer than or equal to 8 characters\",\"name must be longer than or equal to 1 characters\",\"name must be a string\"],\"path\":\"/auth/register\",\"timestamp\":\"2026-09-04T20:00:50.161Z\",\"requestId\":\"4bc548dd-82d5-4a60-9ea7-57cfbc97f12a\"}"
+  },
+  {
+    "suite": "1.9 Error handling / information leakage",
+    "name": "setup: baseline user registered",
+    "pass": true
+  },
+  {
+    "suite": "1.9 Error handling / information leakage",
+    "name": "nonexistent email login → 401",
+    "pass": true,
+    "details": "status=401"
+  },
+  {
+    "suite": "1.9 Error handling / information leakage",
+    "name": "wrong password login → 401",
+    "pass": true,
+    "details": "status=401"
+  },
+  {
+    "suite": "1.9 Error handling / information leakage",
+    "name": "both branches return the exact same error message (no enumeration via message content)",
+    "pass": true,
+    "details": "nonexistent=\"Invalid credentials\" vs wrongPassword=\"Invalid credentials\""
+  },
+  {
+    "suite": "1.9 Error handling / information leakage",
+    "name": "Login timing asymmetry between nonexistent-email and wrong-password branches",
+    "pass": true,
+    "details": "Average response time: nonexistent email 5.5ms vs wrong password 27.5ms (6 samples each). AuthService.login() only runs argon2.verify() when a user record is found, so a timing side-channel exists by design. Explotability is very low in this context (network jitter dwarfs the argon2 cost difference for most attackers) — documented as informative, not a blocking finding.",
+    "isFinding": true,
+    "severity": "info"
+  }
+]

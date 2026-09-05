@@ -1,0 +1,59 @@
+[
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "setup: baseline user registered",
+    "pass": true
+  },
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "PATCH /users/me with rewardPoints → 400 (rejected, not silently ignored)",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "POST /auth/register with role:\"admin\" → 400",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "POST /lists with foreign userId field → 400",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "PATCH /lists/:id with status:\"OPTIMIZED\" → 400 (not in @IsIn allowlist)",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "POST /lists/:id/items with includedInOptimum → 400",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "Static evidence: services never spread DTOs directly into Prisma calls",
+    "pass": true,
+    "details": "UsersService.update() and ListsRepository.update() build the Prisma `data` object with conditional spreads per field (`...(dto.x !== undefined && {x: dto.x})`), never `...dto` — so even if ValidationPipe were bypassed, unsupported fields would not reach the database. Defense in depth already present, not a pending fix.",
+    "isFinding": true,
+    "severity": "info"
+  },
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "duplicate email registration → 409",
+    "pass": true,
+    "details": "status=409"
+  },
+  {
+    "suite": "1.3 Mass assignment / over-posting",
+    "name": "POST /auth/register reveals whether an email is already registered (409)",
+    "pass": true,
+    "details": "This is a standard, widely-accepted industry trade-off (clear registration UX vs. low-impact email enumeration), partially mitigated by the 5 req/min rate limit on this endpoint. Documented as an accepted finding, not a bug to fix.",
+    "isFinding": true,
+    "severity": "info"
+  }
+]

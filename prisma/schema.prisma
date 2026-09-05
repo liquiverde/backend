@@ -1,0 +1,215 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum ProductSource {
+  SEED
+  OPENFOODFACTS
+  USDA
+}
+
+enum DataConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ShoppingListStatus {
+  DRAFT
+  OPTIMIZED
+  COMPLETED
+  CANCELLED
+}
+
+enum RewardReason {
+  HIGH_SCORE_ITEM_INCLUDED
+  SUBSTITUTION_ACCEPTED
+}
+
+// ---------- Models ----------
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  passwordHash  String
+  name          String
+  budgetDefault Decimal? @db.Decimal(10, 2)
+  rewardPoints  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shoppingLists ShoppingList[]
+  rewardEvents  RewardEvent[]
+
+  @@map("users")
+}
+
+model Category {
+  id       String     @id @default(uuid()) @db.Uuid
+  name     String
+  parentId String?    @db.Uuid
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  @@unique([name, parentId])
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Product {
+  id                   String         @id @default(uuid()) @db.Uuid
+  barcode              String?        @unique
+  name                 String
+  brand                String?
+  categoryId           String         @db.Uuid
+  category             Category       @relation(fields: [categoryId], references: [id])
+  price                Decimal        @db.Decimal(10, 2)
+  // Neither Open Food Facts nor USDA FoodData Central expose retail price.
+  // When a product is discovered via those sources (not in the local
+  // dataset), price is estimated from the category average and flagged
+  // here — RNF-10's "never invent silently" applied to price, not just the
+  // sustainability sub-scores.
+  priceIsEstimated     Boolean        @default(false)
+  currency             String         @default("CLP") @db.Char(3)
+  carbonFootprintKg    Decimal?       @db.Decimal(8, 3)
+  originCountry        String?
+  originDistanceKm     Decimal?       @db.Decimal(8, 1)
+  packagingScore       Decimal?       @db.Decimal(5, 2)
+  socialCertifications String[]       @default([])
+  ecoLabel             String?
+  source               ProductSource  @default(SEED)
+
+  // Denormalized cache of the latest SustainabilityScore — read by the
+  // knapsack optimizer hot path (RNF-01, <2s) without joining/aggregating.
+  economicScoreCache Decimal?        @db.Decimal(5, 2)
+  envScoreCache      Decimal?        @db.Decimal(5, 2)
+  socialScoreCache   Decimal?        @db.Decimal(5, 2)
+  finalScoreCache    Decimal?        @db.Decimal(5, 2)
+  dataConfidence     DataConfidence  @default(LOW)
+  scoreCalculatedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scores       SustainabilityScore[]
+  priceHistory PriceHistory[]
+  listItems    ListItem[]
+
+  @@index([categoryId])
+  @@index([finalScoreCache])
+  @@index([name])
+  @@index([brand])
+  @@map("products")
+}
+
+model SustainabilityScore {
+  id             String         @id @default(uuid()) @db.Uuid
+  productId      String         @db.Uuid
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  economicScore  Decimal        @db.Decimal(5, 2)
+  envScore       Decimal        @db.Decimal(5, 2)
+  socialScore    Decimal        @db.Decimal(5, 2)
+  finalScore     Decimal        @db.Decimal(5, 2)
+  dataConfidence DataConfidence
+  missingFields  String[]       @default([])
+  calculatedAt   DateTime       @default(now())
+
+  @@index([productId, calculatedAt])
+  @@map("sustainability_scores")
+}
+
+model Store {
+  id      String  @id @default(uuid()) @db.Uuid
+  name    String
+  chain   String?
+  address String
+  lat     Decimal @db.Decimal(9, 6)
+  lng     Decimal @db.Decimal(9, 6)
+
+  priceHistory PriceHistory[]
+
+  @@unique([name]) // supports idempotent upsert in the seed script
+  @@index([lat, lng])
+  @@map("stores")
+}
+
+model PriceHistory {
+  id         String   @id @default(uuid()) @db.Uuid
+  productId  String   @db.Uuid
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  storeId    String   @db.Uuid
+  store      Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  price      Decimal  @db.Decimal(10, 2)
+  recordedAt DateTime @default(now())
+
+  @@index([productId, storeId, recordedAt])
+  @@map("price_history")
+}
+
+model ShoppingList {
+  id               String             @id @default(uuid()) @db.Uuid
+  userId           String             @db.Uuid
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  budgetMax        Decimal            @db.Decimal(10, 2)
+  status           ShoppingListStatus @default(DRAFT)
+  totalEstSaving   Decimal?           @db.Decimal(10, 2)
+  totalImpactScore Decimal?           @db.Decimal(5, 2)
+  plannedDate      DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items ListItem[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@map("shopping_lists")
+}
+
+model ListItem {
+  id                String       @id @default(uuid()) @db.Uuid
+  listId            String       @db.Uuid
+  list              ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  productId         String       @db.Uuid
+  product           Product      @relation(fields: [productId], references: [id])
+  quantity          Decimal      @default(1) @db.Decimal(10, 3)
+  unitPrice         Decimal      @db.Decimal(10, 2)
+  // Feeds the knapsack's utility(i) term (RF-04) — see AddItemDto.
+  priority          Int          @default(3)
+  includedInOptimum Boolean      @default(false)
+  substitutedFromId String?      @db.Uuid
+  substitutedFrom   ListItem?    @relation("Substitution", fields: [substitutedFromId], references: [id], onDelete: SetNull)
+  substitutions     ListItem[]   @relation("Substitution")
+  createdAt         DateTime     @default(now())
+
+  rewardEvents RewardEvent[]
+
+  @@index([listId])
+  @@index([productId])
+  @@index([substitutedFromId])
+  @@map("list_items")
+}
+
+model RewardEvent {
+  id               String       @id @default(uuid()) @db.Uuid
+  userId           String       @db.Uuid
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points           Int
+  reason           RewardReason
+  sourceListItemId String?      @db.Uuid
+  sourceListItem   ListItem?    @relation(fields: [sourceListItemId], references: [id], onDelete: SetNull)
+  createdAt        DateTime     @default(now())
+
+  @@index([userId, createdAt])
+  @@map("reward_events")
+}

@@ -1,0 +1,63 @@
+[
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "setup: registration succeeds and returns a token",
+    "pass": true
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "no token → 401",
+    "pass": true,
+    "details": "status=401"
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "malformed token → 401",
+    "pass": true,
+    "details": "status=401"
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "real token → 200 (baseline)",
+    "pass": true,
+    "details": "status=200"
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "tampered signature → 401",
+    "pass": true,
+    "details": "status=401"
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "alg:none unsigned token → 401",
+    "pass": true,
+    "details": "status=401"
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "token signed with a different secret → 401",
+    "pass": true,
+    "details": "status=401"
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "expired token (real secret) → 401",
+    "pass": true,
+    "details": "status=401"
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "forged sub (real secret, nonexistent user) on /users/me → 404 clean (not 500)",
+    "pass": true,
+    "details": "status=404"
+  },
+  {
+    "suite": "1.1 Auth / JWT tampering",
+    "name": "Forged-but-validly-signed sub causes an unmapped 500 on POST /lists",
+    "pass": true,
+    "details": "A JWT with a valid signature (requires possessing JWT_SECRET, which is already game-over) but a nonexistent user id causes an unhandled Prisma FK violation on POST /lists, surfaced as a generic 500 instead of a clean 4xx. Low severity: exploiting this already requires the real JWT_SECRET. Recommendation: AllExceptionsFilter could map Prisma P2003 (FK violation) similarly to P2002/P2025.",
+    "isFinding": true,
+    "severity": "low"
+  }
+]

@@ -1,0 +1,61 @@
+[
+  {
+    "suite": "1.4 Injection",
+    "name": "/products/search?q=\"' OR '1'='1\" → not 500",
+    "pass": true,
+    "details": "status=200"
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "/products/search?q=\"' OR '1'='1\" → no anomalous delay (pg_sleep did not execute)",
+    "pass": true,
+    "details": "2942ms"
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "/products/search?q=\"1'; DROP TABLE users;--\" → not 500",
+    "pass": true,
+    "details": "status=200"
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "/products/search?q=\"1'; DROP TABLE users;--\" → no anomalous delay (pg_sleep did not execute)",
+    "pass": true,
+    "details": "267ms"
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "/products/search?q=\"'; SELECT pg_sleep(5);--\" → not 500",
+    "pass": true,
+    "details": "status=200"
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "/products/search?q=\"'; SELECT pg_sleep(5);--\" → no anomalous delay (pg_sleep did not execute)",
+    "pass": true,
+    "details": "322ms"
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "/auth/login email=\"' OR '1'='1\" → 400 (rejected by @IsEmail, never reaches Prisma)",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "/auth/login email=\"admin'--\" → 400 (rejected by @IsEmail, never reaches Prisma)",
+    "pass": true,
+    "details": "status=400"
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "GET /health → 200 (the only $queryRaw in the codebase, no user input interpolated)",
+    "pass": true
+  },
+  {
+    "suite": "1.4 Injection",
+    "name": "No exec()/spawn()/eval() usage with user input in src/ (command injection N/A)",
+    "pass": true,
+    "details": "no matches"
+  }
+]
