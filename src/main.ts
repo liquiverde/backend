@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
@@ -18,6 +19,18 @@ async function bootstrap() {
   // Render's proxy IP for every request. Do NOT use `true`/'*', which would
   // trust an attacker-supplied X-Forwarded-For from arbitrary hops.
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
+  // A client whose base URL carries a trailing slash (e.g.
+  // `https://host/` + `/auth/login`) produces a path like `//auth/login`,
+  // which Express's router treats as a distinct, unmatched route and 404s.
+  // Collapse repeated slashes in the path (not the query string) up front
+  // so a trailing-slash base URL never masks a working route as "down".
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    const [path, query] = req.url.split('?');
+    const collapsed = path.replace(/\/{2,}/g, '/');
+    req.url = query !== undefined ? `${collapsed}?${query}` : collapsed;
+    next();
+  });
 
   const configService = app.get(ConfigService);
   const { port, corsOrigin } = configService.get<AppConfig>('app')!;
